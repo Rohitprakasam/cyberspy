@@ -225,8 +225,9 @@ fun CyberSpyDashboard(onOpenSettings: () -> Unit = {}) {
                             val authRes = api.registerDevice(authReq)
                             val token = authRes.body()?.access_token ?: throw Exception("Auth failed")
 
-                            // 2. Prepare Evidence Payload (Mocked for Demo)
-                            val logsJson = """{"network": {"activeConnections": ["185.220.101.47:443", "8.8.8.8:53"]}, "apps": [], "systemLogs": [{"message": "avc: denied access"}]}"""
+                            // 2. Prepare Evidence Payload (Actual Monitoring Data)
+                            val monitoringEngine = com.cyberspy.app.monitoring.MonitoringEngine(context)
+                            val logsJson = monitoringEngine.captureSnapshot()
                             val logsBody = logsJson.toRequestBody("application/json".toMediaTypeOrNull())
                             val stateCode = com.cyberspy.app.network.AppPreferences.getVictimState(context)
                             val stateBody = stateCode.toRequestBody("text/plain".toMediaTypeOrNull())

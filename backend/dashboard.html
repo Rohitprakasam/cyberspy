@@ -294,7 +294,7 @@
 
             detailsRow.innerHTML = `
                 <td colspan="5" class="py-4 px-6">
-                    <div class="grid grid-cols-2 gap-8">
+                    <div class="grid grid-cols-2 gap-8 mb-6">
                         <div>
                             <h4 class="text-cyan text-xs font-bold uppercase tracking-wider mb-2">Attack Classification</h4>
                             <div class="inline-block bg-[#131D2E] text-white px-3 py-1 rounded uppercase text-xs font-bold border border-[#1E2D45]">
@@ -309,6 +309,25 @@
                         <div>
                             <h4 class="text-cyan text-xs font-bold uppercase tracking-wider mb-2">Indicators of Compromise (IOCs)</h4>
                             ${iocHtml}
+                        </div>
+                    </div>
+
+                    <div class="border-t border-[#1E2D45] pt-6">
+                        <h4 class="text-cyan text-xs font-bold uppercase tracking-wider mb-4 flex items-center gap-2">
+                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2m32 4v-2a4 4 0 00-4-4h-1a4 4 0 00-4 4v2m-9-4h.01M9 16h.01"></path></svg>
+                             Raw Mobile Activity & Live Streams
+                        </h4>
+                        <div class="bg-black rounded-lg border border-[#1E2D45] p-0 overflow-hidden">
+                             <div class="flex bg-[#131D2E] text-[10px] font-bold uppercase text-[#7B8FA8] border-b border-[#1E2D45]">
+                                <div class="px-4 py-2 border-r border-[#1E2D45] bg-[#0E1628] text-cyan">JSON LOG STREAM</div>
+                                <div class="px-4 py-2 border-r border-[#1E2D45]">System State</div>
+                                <div class="px-4 py-2">Forensic Context</div>
+                             </div>
+                             <pre class="p-6 text-[11px] font-mono text-green-400 overflow-auto max-h-[400px] leading-relaxed">${JSON.stringify(c.device_logs || {message: "No raw logs captured"}, null, 4)}</pre>
+                        </div>
+                        <div class="mt-4 flex justify-between items-center text-[10px] text-[#7B8FA8] uppercase tracking-widest font-bold">
+                            <span>Encryption: AES-256-GCM Verified</span>
+                            <span>Transmission ID: ${c.case_id}-RAW-STREAM</span>
                         </div>
                     </div>
                 </td>

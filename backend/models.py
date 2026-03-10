@@ -71,6 +71,7 @@ class CaseRecord(Base):
     attack_type = Column(String(64))
     summary = Column(Text)
     iocs = Column(JSON)  # list of IOC dicts
+    device_logs = Column(JSON)  # raw captured logs
     evidence_hash = Column(String(64))  # SHA-256 of evidence package
     ipfs_cid = Column(String(128))  # IPFS content identifier
     authority_crn = Column(String(64))  # Case Reference Number from authority
@@ -135,6 +136,7 @@ class CaseStatusResponse(BaseModel):
     threat_level: Optional[ThreatLevel] = None
     summary: Optional[str] = None
     iocs: Optional[List[dict]] = None
+    device_logs: Optional[dict] = None
     attack_type: Optional[str] = None
     evidence_hash: Optional[str] = None
     authority_crn: Optional[str] = None
