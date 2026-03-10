@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>CyberSpy — System Architecture & Tech Stack</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #080E1C; color: #E0E8F0; font-family: 'Segoe UI', sans-serif; min-height: 100vh; }
+
+  .page { max-width: 1200px; margin: 0 auto; padding: 40px 32px; }
+
+  .header { text-align: center; margin-bottom: 56px; }
+  .header .badge { display: inline-block; background: #00D4FF22; border: 1px solid #00D4FF44; color: #00D4FF; font-size: 11px; letter-spacing: 4px; padding: 6px 20px; border-radius: 2px; margin-bottom: 20px; }
+  .header h1 { font-size: 42px; font-weight: 700; letter-spacing: 2px; color: #fff; }
+  .header h1 span { color: #00D4FF; }
+  .header p { margin-top: 12px; color: #7B8FA8; font-size: 15px; }
+
+  /* Architecture Diagram */
+  .arch-section { margin-bottom: 64px; }
+  .section-title { font-size: 11px; letter-spacing: 5px; color: #00D4FF; font-weight: 700; margin-bottom: 24px; }
+
+  .arch-diagram { display: grid; grid-template-columns: 1fr 80px 1fr 80px 1fr; gap: 0; align-items: start; margin-bottom: 48px; }
+
+  .arch-col { display: flex; flex-direction: column; gap: 12px; }
+  .arch-col-title { font-size: 11px; letter-spacing: 3px; color: #7B8FA8; font-weight: 600; text-align: center; padding-bottom: 12px; border-bottom: 1px solid #1E2D45; margin-bottom: 4px; }
+
+  .arch-arrow { display: flex; align-items: center; justify-content: center; padding-top: 60px; }
+  .arrow-line { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .arrow-shaft { width: 2px; height: 40px; background: linear-gradient(180deg, #00D4FF44, #00D4FF); }
+  .arrow-head { width: 0; height: 0; border-left: 6px solid transparent; border-right: 6px solid transparent; border-top: 10px solid #00D4FF; }
+  .arrow-label { font-size: 9px; color: #00D4FF88; letter-spacing: 1px; text-align: center; writing-mode: vertical-rl; transform: rotate(180deg); }
+
+  .module { background: #0F1628; border: 1px solid #1E2D45; border-radius: 4px; padding: 14px 16px; position: relative; overflow: hidden; }
+  .module::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; }
+  .module.green::before { background: #00FF88; }
+  .module.cyan::before { background: #00D4FF; }
+  .module.purple::before { background: #7B2FFF; }
+  .module.red::before { background: #FF3366; }
+  .module.yellow::before { background: #FFB800; }
+  .module.blue::before { background: #2D6BFF; }
+
+  .module-icon { font-size: 18px; margin-bottom: 6px; }
+  .module-name { font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 4px; }
+  .module-desc { font-size: 11px; color: #5A6A7E; line-height: 1.5; }
+  .module-tag { display: inline-block; font-size: 9px; letter-spacing: 1px; padding: 2px 8px; border-radius: 2px; margin-top: 6px; font-weight: 600; }
+  .module-tag.green { background: #00FF8820; color: #00FF88; }
+  .module-tag.cyan { background: #00D4FF20; color: #00D4FF; }
+  .module-tag.purple { background: #7B2FFF20; color: #7B2FFF; }
+  .module-tag.red { background: #FF336620; color: #FF3366; }
+  .module-tag.yellow { background: #FFB80020; color: #FFB800; }
+
+  /* Flow diagram */
+  .flow { display: flex; align-items: center; gap: 0; margin: 40px 0; flex-wrap: nowrap; overflow-x: auto; padding: 20px 0; }
+  .flow-step { flex: 1; min-width: 160px; }
+  .flow-box { background: #0F1628; border: 1px solid #1E2D45; border-radius: 4px; padding: 20px 16px; text-align: center; }
+  .flow-num { font-size: 32px; font-weight: 900; margin-bottom: 8px; }
+  .flow-title { font-size: 12px; font-weight: 700; color: #fff; margin-bottom: 6px; }
+  .flow-desc { font-size: 10px; color: #5A6A7E; line-height: 1.5; }
+  .flow-arrow { font-size: 20px; color: #1E2D45; padding: 0 4px; flex-shrink: 0; }
+
+  /* Tech Stack Table */
+  .stack-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 24px; }
+  .stack-card { background: #0F1628; border: 1px solid #1E2D45; border-radius: 4px; padding: 20px; }
+  .stack-card-title { font-size: 12px; font-weight: 700; letter-spacing: 2px; padding-bottom: 12px; border-bottom: 1px solid #1E2D45; margin-bottom: 12px; }
+  .stack-item { display: flex; align-items: flex-start; gap: 10px; padding: 8px 0; border-bottom: 1px solid #0F1A2A; }
+  .stack-item:last-child { border-bottom: none; }
+  .stack-item-dot { width: 6px; height: 6px; border-radius: 50%; margin-top: 5px; flex-shrink: 0; }
+  .stack-item-content { flex: 1; }
+  .stack-item-name { font-size: 12px; font-weight: 600; color: #C0CDD8; }
+  .stack-item-purpose { font-size: 10px; color: #4A5A6A; margin-top: 2px; }
+
+  /* Data flow */
+  .data-flow { background: #0A1020; border: 1px solid #1E2D45; border-radius: 6px; padding: 32px; margin: 24px 0; }
+  .data-flow-title { font-size: 11px; letter-spacing: 3px; color: #7B8FA8; margin-bottom: 24px; }
+  .data-flow-row { display: flex; align-items: center; margin-bottom: 16px; gap: 12px; }
+  .data-flow-source { width: 160px; font-size: 11px; color: #5A6A7E; text-align: right; flex-shrink: 0; }
+  .data-flow-bar-wrap { flex: 1; position: relative; height: 28px; }
+  .data-flow-bar { height: 28px; border-radius: 2px; display: flex; align-items: center; padding: 0 12px; font-size: 11px; font-weight: 600; color: #fff; position: relative; }
+  .data-flow-val { margin-left: auto; font-size: 10px; opacity: 0.7; }
+
+  /* Privacy section */
+  .privacy-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-top: 24px; }
+  .privacy-card { background: #0F1628; border: 1px solid #1E2D45; border-radius: 4px; padding: 20px; display: flex; gap: 16px; }
+  .privacy-icon { font-size: 24px; flex-shrink: 0; }
+  .privacy-title { font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 6px; }
+  .privacy-desc { font-size: 11px; color: #5A6A7E; line-height: 1.6; }
+
+  .divider { height: 1px; background: #1E2D45; margin: 48px 0; }
+
+  .footer { text-align: center; padding: 24px 0; color: #2A3A4A; font-size: 11px; letter-spacing: 2px; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="header">
+    <div class="badge">SYSTEM ARCHITECTURE & TECH STACK</div>
+    <h1><span>CYBER</span>SPY</h1>
+    <p>Full technical reference — Android Phase 1 | Startup Edition 2026</p>
+  </div>
+
+  <!-- ARCHITECTURE DIAGRAM -->
+  <div class="arch-section">
+    <div class="section-title">01 — THREE-LAYER ARCHITECTURE</div>
+
+    <div class="arch-diagram">
+      <!-- Layer 1: Device -->
+      <div class="arch-col">
+        <div class="arch-col-title">📱 LAYER 1 — DEVICE</div>
+        <div class="module green">
+          <div class="module-icon">🔍</div>
+          <div class="module-name">Monitoring Engine</div>
+          <div class="module-desc">Captures network traffic, app activity, system calls, file events 24/7 in background</div>
+          <span class="module-tag green">ALWAYS ON</span>
+        </div>
+        <div class="module cyan">
+          <div class="module-icon">🧩</div>
+          <div class="module-name">Shard Distributor</div>
+          <div class="module-desc">Fragments & distributes AES-256 encrypted log shards to 20+ hidden device locations</div>
+          <span class="module-tag cyan">CORE INNOVATION</span>
+        </div>
+        <div class="module purple">
+          <div class="module-icon">🤖</div>
+          <div class="module-name">On-Device AI</div>
+          <div class="module-desc">TensorFlow Lite model detects anomalies locally — no data leaves device during detection</div>
+          <span class="module-tag purple">OFFLINE AI</span>
+        </div>
+        <div class="module red">
+          <div class="module-icon">🔴</div>
+          <div class="module-name">Report Trigger</div>
+          <div class="module-desc">One-tap button initiates shard recovery, evidence packaging, and dispatch sequence</div>
+          <span class="module-tag red">USER ACTION</span>
+        </div>
+      </div>
+
+      <!-- Arrow 1 -->
+      <div class="arch-arrow">
+        <div class="arrow-line">
+          <span class="arrow-label">ENCRYPTED PACKAGE</span>
+          <div class="arrow-shaft"></div>
+          <div class="arrow-head"></div>
+        </div>
+      </div>
+
+      <!-- Layer 2: Backend -->
+      <div class="arch-col">
+        <div class="arch-col-title">☁️ LAYER 2 — BACKEND</div>
+        <div class="module cyan">
+          <div class="module-icon">⚡</div>
+          <div class="module-name">FastAPI Server</div>
+          <div class="module-desc">Receives encrypted evidence packages, authenticates device, queues for AI processing</div>
+          <span class="module-tag cyan">REST API</span>
+        </div>
+        <div class="module purple">
+          <div class="module-icon">🧠</div>
+          <div class="module-name">AI Analysis Engine</div>
+          <div class="module-desc">LLM + custom ML models analyze logs, identify threats, classify attack vectors, generate report</div>
+          <span class="module-tag purple">LLM + ML</span>
+        </div>
+        <div class="module yellow">
+          <div class="module-icon">📝</div>
+          <div class="module-name">Report Generator</div>
+          <div class="module-desc">Creates structured plain-English forensic report with threat level, timeline, and evidence summary</div>
+          <span class="module-tag yellow">AUTO-GENERATE</span>
+        </div>
+        <div class="module green">
+          <div class="module-icon">🔐</div>
+          <div class="module-name">Evidence Vault</div>
+          <div class="module-desc">IPFS-anchored, SHA-256 verified evidence storage — immutable, court-admissible timestamps</div>
+          <span class="module-tag green">IMMUTABLE</span>
+        </div>
+      </div>
+
+      <!-- Arrow 2 -->
+      <div class="arch-arrow">
+        <div class="arrow-line">
+          <span class="arrow-label">AI REPORT + EVIDENCE</span>
+          <div class="arrow-shaft"></div>
+          <div class="arrow-head"></div>
+        </div>
+      </div>
+
+      <!-- Layer 3: Authorities -->
+      <div class="arch-col">
+        <div class="arch-col-title">🏛️ LAYER 3 — AUTHORITIES</div>
+        <div class="module red">
+          <div class="module-icon">🇮🇳</div>
+          <div class="module-name">State Cyber Cells</div>
+          <div class="module-desc">Direct API integration with 28 state cyber cell dashboards — auto-assigns case to officer</div>
+          <span class="module-tag red">INDIA</span>
+        </div>
+        <div class="module cyan">
+          <div class="module-icon">🌐</div>
+          <div class="module-name">MHA National Portal</div>
+          <div class="module-desc">cybercrime.gov.in webhook — case ID auto-generated, victim notified instantly</div>
+          <span class="module-tag cyan">NATIONAL</span>
+        </div>
+        <div class="module purple">
+          <div class="module-icon">🌍</div>
+          <div class="module-name">Global Authorities</div>
+          <div class="module-desc">Standardized JSON format for Interpol, FBI IC3, Europol — cross-border case initiation</div>
+          <span class="module-tag purple">GLOBAL</span>
+        </div>
+        <div class="module green">
+          <div class="module-icon">📊</div>
+          <div class="module-name">Officer Dashboard</div>
+          <div class="module-desc">AI-prioritized queue, evidence viewer, legal request templates, inter-agency alerts</div>
+          <span class="module-tag green">INVESTIGATOR</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- STEP-BY-STEP FLOW -->
+  <div class="arch-section">
+    <div class="section-title">02 — END-TO-END PROCESS FLOW</div>
+    <div class="flow">
+      <div class="flow-step">
+        <div class="flow-box">
+          <div class="flow-num" style="color:#00FF88">01</div>
+          <div class="flow-title">MONITOR</div>
+          <div class="flow-desc">Silent background collection of all network, app & system logs</div>
+        </div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">
+        <div class="flow-box">
+          <div class="flow-num" style="color:#00D4FF">02</div>
+          <div class="flow-title">FRAGMENT</div>
+          <div class="flow-desc">Encrypt + split logs into shards hidden across 20+ device locations</div>
+        </div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">
+        <div class="flow-box">
+          <div class="flow-num" style="color:#7B2FFF">03</div>
+          <div class="flow-title">DETECT</div>
+          <div class="flow-desc">On-device AI flags anomalies in real time — alerts victim</div>
+        </div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">
+        <div class="flow-box">
+          <div class="flow-num" style="color:#FF3366">04</div>
+          <div class="flow-title">TRIGGER</div>
+          <div class="flow-desc">Victim taps CyberSpy button — recovery + packaging begins</div>
+        </div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">
+        <div class="flow-box">
+          <div class="flow-num" style="color:#FFB800">05</div>
+          <div class="flow-title">ANALYZE</div>
+          <div class="flow-desc">AI generates plain-English forensic report with threat level</div>
+        </div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">
+        <div class="flow-box">
+          <div class="flow-num" style="color:#00FF88">06</div>
+          <div class="flow-title">DISPATCH</div>
+          <div class="flow-desc">Report + evidence sent directly to Cyber Cell API — case ID returned instantly</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- TECH STACK -->
+  <div class="arch-section">
+    <div class="section-title">03 — TECH STACK BREAKDOWN</div>
+    <div class="stack-grid">
+
+      <div class="stack-card">
+        <div class="stack-card-title" style="color:#00FF88">📱 ANDROID APP</div>
+        <div class="stack-item"><div class="stack-item-dot" style="background:#00FF88"></div><div class="stack-item-content"><div class="stack-item-name">Kotlin + Jetpack Compose</div><div class="stack-item-purpose">Primary language + modern declarative UI</div></div></div>
+        <div class="stack-item"><div class="stack-item-dot" style="background:#00FF88"></div><div class="stack-item-content"><div class="stack-item-name">Android WorkManager</div><div class="stack-item-purpose">Persistent background monitoring service</div></div></div>
+        <div class="stack-item"><div class="stack-item-dot" style="background:#00FF88"></div><div class="stack-item-content"><div class="stack-item-name">Android VPN API</div><div class="stack-item-purpose">Local VPN for full network traffic capture</div></div></div>
+        <div class="stack-item"><div class="stack-item-dot" style="background:#00FF88"></div><div class="stack-item-content"><div class="stack-item-name">Room + EncryptedSharedPrefs</div><div class="stack-item-purpose">Local encrypted structured data storage</div></div></div>
+        <div class="stack-item"><div class="stack-item-dot" style="background:#00FF88"></div><div class="stack-item-content"><div class="stack-item-name">TensorFlow Lite</div><div class="stack-item-purpose">On-device anomaly detection ML model</div></div></div>
+        <div class="stack-item"><div class="stack-item-dot" style="background:#00FF88"></div><div class="stack-item-content"><div class="stack-item-name">AES-256-GCM + Android Keystore</div><div class="stack-item-purpose">Hardware-backed encryption for all shards</div></div></div>
+        <div class="stack-item"><div class="stack-item-dot" style="background:#00FF88"></div><div class="stack-item-content"><div class="stack-item-name">Custom StorageFragmentManager</div><div class="stack-item-purpose">Shard distribution and recovery engine (proprietary)</div></div></div>
+      </div>
+
+      <div class="stack-card">
+        <div class="stack-card-title" style="color:#00D4FF">☁️ BACKEND & AI</div>
+        <div class="stack-item"><div class="stack-item-dot" style="background:#00D4FF"></div><div class="stack-item-content"><div class="stack-item-name">Python FastAPI</div><div class="stack-item-purpose">High-performance async REST API server</div></div></div>
+        <div class="stack-item"><div class="stack-item-dot" style="background:#00D4FF"></div><div class="stack-item-content"><div class="stack-item-name">LLM API (Claude / GPT-4)</div><div class="stack-item-purpose">Natural language forensic report generation</div></div></div>
+        <div class="stack-item"><div class="stack-item-dot" style="background:#00D4FF"></div><div class="stack-item-content"><div class="stack-item-name">Custom ML (scikit-learn)</div><div class="stack-item-purpose">Log pattern matching, attack classification</div></div></div>
+        <div class="stack-item"><div class="stack-item-dot" style="background:#00D4FF"></div><div class="stack-item-content"><div class="stack-item-name">PostgreSQL + Redis</div><div class="stack-item-purpose">Persistent DB + high-speed caching layer</div></div></div>
+        <div class="stack-item"><div class="stack-item-dot" style="background:#00D4FF"></div><div class="stack-item-content"><div class="stack-item-name">Celery + RabbitMQ</div><div class="stack-item-purpose">Async report generation task queue</div></div></div>
+        <div class="stack-item"><div class="stack-item-dot" style="background:#00D4FF"></div><div class="stack-item-content"><div class="stack-item-name">Docker + Kubernetes (GCP)</div><div class="stack-item-purpose">Scalable containerized cloud deployment</div></div></div>
+        <div class="stack-item"><div class="stack-item-dot" style="background:#00D4FF"></div><div class="stack-item-content"><div class="stack-item-name">IPFS Evidence Anchoring</div><div class="stack-item-purpose">Immutable, tamper-proof evidence timestamping</div></div></div>
+      </div>
+
+      <div class="stack-card">
+        <div class="stack-card-title" style="color:#7B2FFF">🏛️ AUTHORITY INTEGRATION</div>
+        <div class="stack-item"><div class="stack-item-dot" style="background:#7B2FFF"></div><div class="stack-item-content"><div class="stack-item-name">MHA Cybercrime Portal API</div><div class="stack-item-purpose">Direct REST webhook to cybercrime.gov.in</div></div></div>
+        <div class="stack-item"><div class="stack-item-dot" style="background:#7B2FFF"></div><div class="stack-item-content"><div class="stack-item-name">State Cyber Cell APIs</div><div class="stack-item-purpose">28-state direct case submission network</div></div></div>
+        <div class="stack-item"><div class="stack-item-dot" style="background:#7B2FFF"></div><div class="stack-item-content"><div class="stack-item-name">Digital Signatures (PKI)</div><div class="stack-item-purpose">Report integrity proof for court admissibility</div></div></div>
+        <div class="stack-item"><div class="stack-item-dot" style="background:#7B2FFF"></div><div class="stack-item-content"><div class="stack-item-name">JWT Auth + Audit Logs</div><div class="stack-item-purpose">Secure officer access with full audit trail</div></div></div>
+        <div class="stack-item"><div class="stack-item-dot" style="background:#7B2FFF"></div><div class="stack-item-content"><div class="stack-item-name">WebSocket Push Notifications</div><div class="stack-item-purpose">Real-time case status updates to victim app</div></div></div>
+        <div class="stack-item"><div class="stack-item-dot" style="background:#7B2FFF"></div><div class="stack-item-content"><div class="stack-item-name">Interpol / FBI IC3 Format</div><div class="stack-item-purpose">Standardized JSON for cross-border dispatch</div></div></div>
+        <div class="stack-item"><div class="stack-item-dot" style="background:#7B2FFF"></div><div class="stack-item-content"><div class="stack-item-name">CERT-In Alert Integration</div><div class="stack-item-purpose">Critical infrastructure incident forwarding</div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- DATA MONITORED -->
+  <div class="arch-section">
+    <div class="section-title">04 — DATA MONITORED ON DEVICE</div>
+    <div class="data-flow">
+      <div class="data-flow-title">WHAT CYBERSPY CAPTURES (ALL STORED LOCALLY ON DEVICE)</div>
+      <div class="data-flow-row">
+        <div class="data-flow-source">Network Traffic</div>
+        <div class="data-flow-bar-wrap">
+          <div class="data-flow-bar" style="width:95%;background:linear-gradient(90deg,#00D4FF22,#00D4FF44)">All IPs, domains, bytes, timestamps, geolocation <span class="data-flow-val">CRITICAL</span></div>
+        </div>
+      </div>
+      <div class="data-flow-row">
+        <div class="data-flow-source">App Activity</div>
+        <div class="data-flow-bar-wrap">
+          <div class="data-flow-bar" style="width:88%;background:linear-gradient(90deg,#7B2FFF22,#7B2FFF44)">Launch times, background ops, permission use (mic/cam/GPS) <span class="data-flow-val">HIGH</span></div>
+        </div>
+      </div>
+      <div class="data-flow-row">
+        <div class="data-flow-source">System Logs</div>
+        <div class="data-flow-bar-wrap">
+          <div class="data-flow-bar" style="width:80%;background:linear-gradient(90deg,#00FF8822,#00FF8844)">Kernel events, process creation, root attempts, syscalls <span class="data-flow-val">HIGH</span></div>
+        </div>
+      </div>
+      <div class="data-flow-row">
+        <div class="data-flow-source">File System Events</div>
+        <div class="data-flow-bar-wrap">
+          <div class="data-flow-bar" style="width:70%;background:linear-gradient(90deg,#FFB80022,#FFB80044)">Unusual file creation/deletion in contacts, media, docs <span class="data-flow-val">MEDIUM</span></div>
+        </div>
+      </div>
+      <div class="data-flow-row">
+        <div class="data-flow-source">SMS / Call Metadata</div>
+        <div class="data-flow-bar-wrap">
+          <div class="data-flow-bar" style="width:60%;background:linear-gradient(90deg,#FF336622,#FF336644)">Unusual call/SMS patterns, SIM swaps, OTP interception signals <span class="data-flow-val">MEDIUM</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- PRIVACY -->
+  <div class="arch-section">
+    <div class="section-title">05 — PRIVACY & SECURITY BY DESIGN</div>
+    <div class="privacy-grid">
+      <div class="privacy-card">
+        <div class="privacy-icon">🔒</div>
+        <div>
+          <div class="privacy-title">Data Never Leaves Without Consent</div>
+          <div class="privacy-desc">All monitoring data is stored exclusively on the victim's device. Nothing is transmitted to CyberSpy servers until the user explicitly presses the Report button.</div>
+        </div>
+      </div>
+      <div class="privacy-card">
+        <div class="privacy-icon">🔑</div>
+        <div>
+          <div class="privacy-title">Hardware-Backed Encryption</div>
+          <div class="privacy-desc">All shards are encrypted using AES-256-GCM with keys stored in Android Keystore (hardware security module). Keys cannot be extracted even with root access.</div>
+        </div>
+      </div>
+      <div class="privacy-card">
+        <div class="privacy-icon">⚖️</div>
+        <div>
+          <div class="privacy-title">Court-Admissible Evidence</div>
+          <div class="privacy-desc">Every evidence package includes SHA-256 integrity hashes and PKI digital signatures, meeting requirements of Indian Evidence Act Section 65B for electronic records.</div>
+        </div>
+      </div>
+      <div class="privacy-card">
+        <div class="privacy-icon">🛡️</div>
+        <div>
+          <div class="privacy-title">DPDP Act 2023 Compliant</div>
+          <div class="privacy-desc">Full compliance with India's Digital Personal Data Protection Act 2023, GDPR-aligned for global markets. Explicit consent, right to delete, no data monetization.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">CYBERSPY — CONFIDENTIAL STARTUP TECHNICAL REFERENCE — 2026</div>
+</div>
+</body>
+</html>

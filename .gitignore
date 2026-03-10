@@ -1,0 +1,61 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+[Tt]humbs.db
+
+# Databases
+*.db
+*.sqlite3
+
+# Environment variables / Secrets
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak
+venv.bak
+
+# Android / Gradle
+.gradle/
+build/
+capture/
+local.properties
+.idea/
+*.iml
+.cxx/
+*.keystore
+!debug.keystore
+*.jks
+release/
+
+# Evidence / Uploads
+evidence_packages/
+*.enc
+*.cyberspy
+
+# Python
+.pytest_cache/
+.coverage
+htmlcov/
+dist/
+build/
+*.egg-info/
+
+# Misc
+.gemini/
+.agents/
+.agent/
+brain/
+tmp/
+test_api.py

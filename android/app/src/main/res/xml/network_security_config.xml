@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Allows HTTP (cleartext) traffic to ANY host.
+    Required for hackathon demo: phone connects to laptop via local IP.
+    In production, restrict to specific domains with HTTPS.
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true" />
+</network-security-config>

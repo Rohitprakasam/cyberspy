@@ -1,0 +1,58 @@
+# CyberSpy — Comprehensive Project Analysis
+
+CyberSpy is a next-generation mobile security startup (planned for 2026) that addresses the "Evidence Destruction Window" in cybercrime by preserving critical forensic data through a novel distributed storage architecture on Android devices.
+
+## 1. Executive Overview
+- **Core Value Proposition**: Detect hacks in real-time, preserve evidence in a tamper-proof manner, and provide direct reporting to cyber authorities with a single tap.
+- **Primary Innovation**: **Distributed Evidence Storage**, where encrypted log fragments (shards) are hidden across 20-50 obscure device locations, preventing attackers from wiping all proof of the hack.
+
+## 2. Technical Architecture
+The system follows a three-layer architecture:
+- **Device Layer (Android)**:
+    - **Monitoring Engine**: Background service (WorkManager) logging network traffic (VPN API), app activity, and system logs.
+    - **Shard Distributor**: Encrypts (AES-256) and fragments logs into hidden shards.
+    - **On-Device AI**: TensorFlow Lite for offline anomaly detection.
+- **Backend Layer (Cloud)**:
+    - **FastAPI Server**: High-performance ingestion of evidence packages.
+    - **AI Analysis Engine**: Uses LLMs (Claude/GPT-4) to translate raw technical logs into plain-English forensic reports.
+    - **Evidence Vault**: IPFS anchoring for immutable, court-admissible timestamps (SHA-256).
+- **Integration Layer (Authorities)**:
+    - Direct API hooks into India's **National Cybercrime Portal** and **State Cyber Cells**.
+    - Standardized JSON formats for global agencies (Interpol, FBI, Europol).
+
+## 3. The "Distributed Storage" Innovation
+Unlike standard security apps that store logs in a central directory, CyberSpy:
+1. Encrypts data with hardware-backed keys (Android Keystore).
+2. Splits data into micro-shards.
+3. Hides shards in image metadata (EXIF), app caches, database segments, and system directories.
+4. Maintains a hidden, fragmented reassembly index.
+*Result*: Even if a hacker remote-wipes the device or deletes major system logs, the high-entropy shards remain, allowing for reconstruction of the attack timeline.
+
+## 4. Legal & Compliance Framework
+- **Indian Evidence Act (Section 65B)**: Meets requirements for electronic evidence admissibility via digital signatures and IPFS-anchored timestamps.
+- **DPDP Act 2023**: Built with "Privacy by Design"—data never leaves the device without explicit user consent (Report button trigger).
+- **IT Act 2000**: Complies with Sections 43A, 66, and 80.
+
+## 5. Business Strategy
+- **Target Market**: Tier-1 urban smartphone users in India (addressing 50M+ users initially).
+- **Business Model**: 
+    - **Free**: Basic alerts & manual reports.
+    - **Pro (₹199/mo)**: Distributed vault, AI reports, direct police submission.
+    - **Enterprise**: API for banks and corporate device protection.
+    - **Government**: Dashboards for State Cyber Cells.
+- **Roadmap**: 
+    - Q1 2026: Foundation (Prototype).
+    - Q2 2026: AI Core & Police Pilot.
+    - Q3 2026: Public Launch (Play Store).
+    - Q4 2026: Scale (iOS & Enterprise).
+
+## 6. Synthesis of Documents Analyzed
+| Document | Focus | Key Takeaway |
+| :--- | :--- | :--- |
+| [Architecture_and_TechStack.html](file:///c:/Users/rohit/OneDrive/Desktop/hackathon/cyberspy/CyberSpy_Architecture_and_TechStack.html) | Technical Details | Modern, scalable stack with a focus on privacy and on-device processing. |
+| [Project_Proposal.docx](file:///c:/Users/rohit/OneDrive/Desktop/hackathon/cyberspy/CyberSpy_Project_Proposal.docx) | Business Case | Highlights the 72-hour "evidence destruction window" as the core problem. |
+| [Investigation_Procedure_Manual.docx](file:///c:/Users/rohit/OneDrive/Desktop/hackathon/cyberspy/Cybercrime_Investigation_Procedure_Manual.docx) | Legal Workflow | Maps the bureaucratically slow manual process that CyberSpy aims to accelerate. |
+| [Pitch_Deck.pptx](file:///c:/Users/rohit/OneDrive/Desktop/hackathon/cyberspy/CyberSpy_Pitch_Deck.pptx) | Strategic Vision | Concise summary for investors; emphasizes the "Ask" for ₹2 Crore Seed funding. |
+
+---
+*Analysis completed by Antigravity AI | 2026-03-09*
