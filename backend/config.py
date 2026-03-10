@@ -16,7 +16,7 @@ class Settings(BaseSettings):
     JWT_EXPIRY_HOURS: int = 720  # 30 days for device tokens
 
     # --- Database ---
-    DATABASE_URL: str = "sqlite+aiosqlite:///./cyberspy_v3.db"
+    DATABASE_URL: str = "sqlite+aiosqlite:///./cyberspy_v4.db"
 
     # --- Redis ---
     REDIS_URL: str = "redis://localhost:6379/0"
