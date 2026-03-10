@@ -11,19 +11,19 @@ class Settings(BaseSettings):
     DEBUG: bool = True
 
     # --- Security ---
-    SECRET_KEY: str = "cyberspy-dev-secret-change-in-production"
+    SECRET_KEY: str = "dev-key-placeholder"
     JWT_ALGORITHM: str = "HS256"
     JWT_EXPIRY_HOURS: int = 720  # 30 days for device tokens
 
     # --- Database ---
-    DATABASE_URL: str = "sqlite+aiosqlite:///./cyberspy.db"
+    DATABASE_URL: str = "sqlite+aiosqlite:///./cyberspy_v3.db"
 
     # --- Redis ---
     REDIS_URL: str = "redis://localhost:6379/0"
 
     # --- AI / LLM ---
     LLM_PROVIDER: str = "gemini"  # "openai" | "gemini" | "mock"
-    GEMINI_API_KEY: Optional[str] = "AIzaSyBfwJCkaCTd2qBYHv41XtAMrwLdQwMT3zw"
+    GEMINI_API_KEY: Optional[str] = None
     OPENAI_API_KEY: Optional[str] = None
 
     # --- IPFS ---

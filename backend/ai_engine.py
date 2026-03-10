@@ -55,31 +55,44 @@ async def analyze_logs_with_llm(raw_logs: str) -> ThreatSnapshot:
 async def _analyze_with_gemini(raw_logs: str) -> ThreatSnapshot:
     """Analyze logs using Google Gemini API."""
     import httpx
+    import traceback
 
-    url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent"
+    url = "https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent"
     headers = {"Content-Type": "application/json"}
     params = {"key": settings.GEMINI_API_KEY}
+    
+    prompt = f"{SYSTEM_PROMPT}\n\nDEVICE ACTIVITY LOGS:\n{raw_logs}"
     payload = {
         "contents": [
             {
                 "parts": [
-                    {"text": f"{SYSTEM_PROMPT}\n\nDEVICE ACTIVITY LOGS:\n{raw_logs}"}
+                    {"text": prompt}
                 ]
             }
         ],
         "generationConfig": {
             "temperature": 0.2,
+            "topP": 0.8,
+            "topK": 40,
             "maxOutputTokens": 1024,
         },
     }
 
-    async with httpx.AsyncClient(timeout=30.0) as client:
-        resp = await client.post(url, json=payload, headers=headers, params=params)
-        resp.raise_for_status()
-        data = resp.json()
-
-    text = data["candidates"][0]["content"]["parts"][0]["text"]
-    return _parse_llm_response(text)
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            resp = await client.post(url, json=payload, headers=headers, params=params)
+            if resp.status_code != 200:
+                print(f"GEMINI API ERROR {resp.status_code}: {resp.text}")
+                resp.raise_for_status()
+            
+            data = resp.json()
+            text = data["candidates"][0]["content"]["parts"][0]["text"]
+            return _parse_llm_response(text)
+            
+    except Exception as e:
+        print(f"CRITICAL: Gemini analysis failed ({e}). Falling back to mock analysis.")
+        traceback.print_exc()
+        return _mock_analysis(raw_logs)
 
 
 async def _analyze_with_openai(raw_logs: str) -> ThreatSnapshot:

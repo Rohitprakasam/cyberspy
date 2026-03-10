@@ -7,6 +7,8 @@ All API routes, WebSocket handlers, and application lifecycle events.
 import os
 import uuid
 import hashlib
+import json
+import traceback
 from datetime import datetime
 from contextlib import asynccontextmanager
 from typing import Optional
@@ -37,16 +39,14 @@ from models import (
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Startup / shutdown events."""
-    # Startup
+    # Startup logic
     await init_db()
     os.makedirs(settings.EVIDENCE_UPLOAD_DIR, exist_ok=True)
-    print(f"🛡️  CyberSpy Backend v{settings.APP_VERSION} started")
-    print(f"   LLM Provider: {settings.LLM_PROVIDER}")
-    print(f"   Evidence Dir:  {settings.EVIDENCE_UPLOAD_DIR}")
+    print("CyberSpy Backend v1.0.0 started")
+    print(f"LLM Provider: {settings.LLM_PROVIDER}")
     yield
-    # Shutdown
-    print("🛡️  CyberSpy Backend shutting down")
+    # Shutdown logic
+    print("CyberSpy Backend shutting down")
 
 
 app = FastAPI(
@@ -151,65 +151,68 @@ async def submit_evidence(
     device_id: str = Depends(verify_device_token),
     db: AsyncSession = Depends(get_db),
 ):
-    """
-    Core endpoint: receives encrypted evidence package from the CyberSpy app.
+    print(f"DEBUG: submit_evidence called by {device_id}")
+    try:
+        # --- Step 1: Save & hash the evidence file ---
+        case_id = f"CS-{uuid.uuid4().hex[:8].upper()}"
+        file_path = os.path.join(settings.EVIDENCE_UPLOAD_DIR, f"{case_id}.cyberspy")
 
-    Flow:
-    1. Save evidence file and compute SHA-256 hash
-    2. Run AI analysis on device logs
-    3. Generate forensic report
-    4. Dispatch to appropriate authority
-    5. Return case ID to the device
-    """
-    # --- Step 1: Save & hash the evidence file ---
-    case_id = f"CS-{uuid.uuid4().hex[:8].upper()}"
-    file_path = os.path.join(settings.EVIDENCE_UPLOAD_DIR, f"{case_id}.cyberspy")
+        content = await evidence_file.read()
+        evidence_hash = hashlib.sha256(content).hexdigest()
 
-    content = await evidence_file.read()
-    evidence_hash = hashlib.sha256(content).hexdigest()
+        with open(file_path, "wb") as f:
+            f.write(content)
 
-    with open(file_path, "wb") as f:
-        f.write(content)
+        # --- Step 2: AI Analysis ---
+        log_text = device_logs if device_logs else "No raw logs provided — using evidence metadata"
+        snapshot = await analyze_logs_with_llm(log_text)
 
-    # --- Step 2: AI Analysis ---
-    log_text = device_logs if device_logs else "No raw logs provided — using evidence metadata"
-    snapshot = await analyze_logs_with_llm(log_text)
+        # --- Step 3: Generate Forensic Report ---
+        report = generate_forensic_report(case_id, snapshot)
 
-    # --- Step 3: Generate Forensic Report ---
-    report = generate_forensic_report(case_id, snapshot)
+        # --- Step 4: Dispatch to Authority ---
+        dispatch_result = await dispatch_to_authority(
+            case_id, snapshot, evidence_hash, victim_state
+        )
 
-    # --- Step 4: Dispatch to Authority ---
-    dispatch_result = await dispatch_to_authority(
-        case_id, snapshot, evidence_hash, victim_state
-    )
+        # --- Step 5: Save case to DB ---
+        try:
+            logs_data = json.loads(device_logs) if device_logs else {}
+        except:
+            logs_data = {"error": "Malformed JSON logs"}
 
-    # --- Step 5: Save case to DB ---
-    case = CaseRecord(
-        case_id=case_id,
-        device_id=device_id,
-        status=CaseStatus.DISPATCHED.value,
-        threat_level=snapshot.threat_level.value,
-        attack_type=snapshot.attack_type.value,
-        summary=snapshot.summary,
-        iocs=[ioc.model_dump() for ioc in snapshot.iocs],
-        evidence_hash=evidence_hash,
-        authority_crn=dispatch_result.authority_crn,
-        dispatched_to=dispatch_result.dispatched_to,
-        report_path=file_path,
-    )
-    db.add(case)
-    await db.flush()
+        case = CaseRecord(
+            case_id=case_id,
+            device_id=device_id,
+            status=CaseStatus.DISPATCHED.value,
+            threat_level=snapshot.threat_level.value,
+            attack_type=snapshot.attack_type.value,
+            summary=snapshot.summary,
+            iocs=[ioc.model_dump() for ioc in snapshot.iocs],
+            device_logs=logs_data,
+            evidence_hash=evidence_hash,
+            authority_crn=dispatch_result.authority_crn,
+            dispatched_to=dispatch_result.dispatched_to,
+            report_path=file_path,
+        )
+        db.add(case)
+        await db.flush()
 
-    return EvidenceSubmitResponse(
-        case_id=case_id,
-        status=CaseStatus.DISPATCHED,
-        evidence_hash=evidence_hash,
-        message=(
-            f"Evidence received and analyzed. Threat level: {snapshot.threat_level.value}. "
-            f"Dispatched to {dispatch_result.dispatched_to}. "
-            f"Authority CRN: {dispatch_result.authority_crn}"
-        ),
-    )
+        return EvidenceSubmitResponse(
+            case_id=case_id,
+            status=CaseStatus.DISPATCHED,
+            evidence_hash=evidence_hash,
+            message=(
+                f"Evidence received and analyzed. Threat level: {snapshot.threat_level.value}. "
+                f"Dispatched to {dispatch_result.dispatched_to}. "
+                f"Authority CRN: {dispatch_result.authority_crn}"
+            ),
+        )
+    except Exception as e:
+        import traceback
+        with open("error_log.txt", "a") as f:
+            f.write(f"\n--- ERROR {datetime.now()} ---\n{traceback.format_exc()}\n")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 # ============================================================
@@ -271,6 +274,7 @@ async def get_all_cases(db: AsyncSession = Depends(get_db)):
             threat_level=c.threat_level,
             summary=c.summary,
             iocs=c.iocs,
+            device_logs=c.device_logs,
             attack_type=c.attack_type,
             evidence_hash=c.evidence_hash,
             authority_crn=c.authority_crn,
